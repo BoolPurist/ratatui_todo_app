@@ -1,0 +1,25 @@
+[package]
+name = "todo_with_ratatui"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+anyhow = { version = "1.0.71", features = ["backtrace"] }
+crossterm = "0.26.1"
+dotenv = "0.15.0"
+env_logger = "0.10.0"
+log = "0.4.19"
+ratatui = "0.21.0"
+tui-textarea = "0.2.0"
+
+
+derive_more = { version = "0.99.17", default-feature = false, features = [
+  "as_ref",
+  "deref",
+  "from",
+  "into",
+  "try_into",
+  "display",
+] }
