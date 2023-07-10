@@ -24,6 +24,15 @@ impl AppContext {
         }
     }
 
+    pub fn toggle_todo(&mut self) {
+        if let Some(selection) = self.selection {
+            self.todos
+                .get_mut(selection as usize)
+                .unwrap()
+                .toggle_done();
+        }
+    }
+
     pub fn selection_up(&mut self) {
         let new_selection: Option<u16> = match self.selection {
             None if !self.todos.is_empty() => Some(0),

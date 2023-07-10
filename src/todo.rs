@@ -31,6 +31,10 @@ impl Todo {
     pub fn content(&self) -> &TrimmedText {
         &self.content
     }
+    pub fn toggle_done(&mut self) -> &mut Self {
+        self.done = !self.done;
+        self
+    }
 
     pub fn done(&self) -> bool {
         self.done

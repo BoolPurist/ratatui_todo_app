@@ -11,6 +11,7 @@ pub fn run(app: &mut AppContext, terminal: &mut AppBackEndTerminal) -> AppResult
             AppInput::Quit => break,
             AppInput::UserPresedUp => app.selection_up(),
             AppInput::UserPressedDown => app.selection_down(),
+            AppInput::UserPressedEnter => app.toggle_todo(),
             _ => (),
         }
         app.render(terminal)?;

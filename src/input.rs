@@ -8,6 +8,7 @@ pub enum AppInput {
     Event(Event),
     KeyEvent(KeyEvent),
     UserPresedUp,
+    UserPressedEnter,
     UserPressedDown,
     Tick,
     Quit,
@@ -18,6 +19,7 @@ pub fn handle_input() -> AppResult<AppInput> {
         match event::read()? {
             Event::Key(key) => match key.code {
                 KeyCode::Char('q') => Ok(AppInput::Quit),
+                KeyCode::Enter => Ok(AppInput::UserPressedEnter),
                 KeyCode::Down => Ok(AppInput::UserPressedDown),
                 KeyCode::Up => Ok(AppInput::UserPresedUp),
                 _ => Ok(AppInput::KeyEvent(key)),
