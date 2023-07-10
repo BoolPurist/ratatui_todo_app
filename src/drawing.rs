@@ -1,21 +1,19 @@
 use ratatui::{
     style::{Color, Style},
     text::{Line, Span},
-    widgets::ListItem,
 };
 
 use crate::Todo;
-
-pub fn draw_one_todo(todo: &Todo) -> ListItem {
+const TICK: &str = "- [x] \n";
+pub fn draw_one_todo(todo: &Todo) -> Line {
     let done = todo.done();
     let (color, tick) = (
         if done { Color::Green } else { Color::Red },
-        if done { "- [x] " } else { "- [ ] " },
+        if done { TICK } else { "- [ ] \n" },
     );
-    let line: Line = vec![
+    vec![
         Span::styled(tick, Style::default().fg(color)),
         Span::raw(todo.content().to_string()),
     ]
-    .into();
-    ListItem::new(line)
+    .into()
 }

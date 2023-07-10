@@ -26,7 +26,7 @@ fn main() -> AppResult<()> {
     let mut app = AppContext::new(
         [
             Todo::dev_new("Hello"),
-            Todo::dev_new("Hello xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx222222xx"),
+            Todo::dev_new("Hello xxxxxxxxxxxx xxxx xxxxxxxx xxxxxxxx xxxxx xxxxxxxxx xxxxxx xxxxxx xxxxxx xxxxxxx xxxxxxx xxx222222xx"),
         ]
         .into_iter(),
     );

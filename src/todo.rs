@@ -20,7 +20,7 @@ impl Todo {
     }
 
     pub fn recommend_width(&self) -> usize {
-        "- [ ] ".len() + self.content().len()
+        "- [ ] ".len() + self.content().len() + 10
     }
 
     pub fn mark_it_done(mut self) -> Self {

@@ -3,6 +3,11 @@ use crate::Todo;
 use crate::drawing;
 use crate::prelude::*;
 use ratatui::layout::Rect;
+use ratatui::text::Line;
+use ratatui::text::Text;
+use ratatui::widgets::Padding;
+use ratatui::widgets::Paragraph;
+use ratatui::widgets::Wrap;
 
 pub struct AppContext {
     todos: Vec<Todo>,
@@ -37,8 +42,6 @@ impl AppContext {
         use ratatui::layout::Layout;
         use ratatui::widgets::Block;
         use ratatui::widgets::Borders;
-        use ratatui::widgets::List;
-        use ratatui::widgets::ListItem;
 
         tui.draw(|frame| {
             let whole_size = frame.size();
@@ -55,14 +58,14 @@ impl AppContext {
                     Constraint::Length(right),
                 ])
                 .split(inner_size);
-            let todo_container = Block::default().borders(Borders::ALL);
-            let list = {
-                let list_elements: Vec<ListItem> =
-                    self.todos.iter().map(drawing::draw_one_todo).collect();
+            let todo_container = Block::default()
+                .borders(Borders::ALL)
+                .padding(Padding::uniform(1));
+            let list: Vec<Line> = { self.todos.iter().map(drawing::draw_one_todo).collect() };
 
-                List::new(list_elements)
-            }
-            .block(todo_container);
+            let list = Paragraph::new(Text::from(list))
+                .wrap(Wrap { trim: true })
+                .block(todo_container);
 
             frame.render_widget(container, whole_size);
             frame.render_widget(list, laytout[1]);
