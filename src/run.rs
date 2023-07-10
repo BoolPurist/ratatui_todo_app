@@ -7,8 +7,11 @@ use crate::{
 pub fn run(app: &mut AppContext, terminal: &mut AppBackEndTerminal) -> AppResult<()> {
     loop {
         let event = input::handle_input()?;
-        if AppInput::Quit == event {
-            break;
+        match event {
+            AppInput::Quit => break,
+            AppInput::UserPresedUp => app.selection_up(),
+            AppInput::UserPressedDown => app.selection_down(),
+            _ => (),
         }
         app.render(terminal)?;
     }

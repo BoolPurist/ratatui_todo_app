@@ -7,6 +7,8 @@ use crossterm::event::{self, Event, KeyCode, KeyEvent};
 pub enum AppInput {
     Event(Event),
     KeyEvent(KeyEvent),
+    UserPresedUp,
+    UserPressedDown,
     Tick,
     Quit,
 }
@@ -14,13 +16,12 @@ pub enum AppInput {
 pub fn handle_input() -> AppResult<AppInput> {
     if event::poll(Duration::from_millis(250))? {
         match event::read()? {
-            Event::Key(key) => {
-                if KeyCode::Char('q') == key.code {
-                    Ok(AppInput::Quit)
-                } else {
-                    Ok(AppInput::KeyEvent(key))
-                }
-            }
+            Event::Key(key) => match key.code {
+                KeyCode::Char('q') => Ok(AppInput::Quit),
+                KeyCode::Down => Ok(AppInput::UserPressedDown),
+                KeyCode::Up => Ok(AppInput::UserPresedUp),
+                _ => Ok(AppInput::KeyEvent(key)),
+            },
             event => Ok(AppInput::Event(event)),
         }
     } else {
