@@ -13,6 +13,20 @@ pub enum CurrentView {
     TodoCreation,
 }
 
+impl TryFrom<String> for CurrentView {
+    type Error = AppError;
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        match value.as_str() {
+            "TodoList" => Ok(Self::TodoList),
+            "TodoAdd" => Ok(Self::TodoCreation),
+            _ => Err(anyhow!(
+                "Word \"{}\" is not a valid keyword for a start view",
+                value
+            )),
+        }
+    }
+}
+
 impl Default for CurrentView {
     fn default() -> Self {
         Self::TodoList
@@ -20,15 +34,15 @@ impl Default for CurrentView {
 }
 
 #[derive(Default)]
-pub struct AppContext<'a> {
+pub struct AppContext {
     pub todos: Vec<Todo>,
     pub selection: Selection,
     pub current_view: CurrentView,
-    pub creation_mask: TextArea<'a>,
+    pub creation_mask: TextArea<'static>,
     pub submission_error: Option<String>,
 }
 
-impl<'a> AppContext<'a> {
+impl AppContext {
     pub fn new(todos: impl IntoIterator<Item = Todo>) -> Self {
         Self {
             todos: todos.into_iter().collect(),
@@ -37,7 +51,7 @@ impl<'a> AppContext<'a> {
         }
     }
 
-    pub fn view(mut self, new_view: CurrentView) -> Self {
+    pub fn view(&mut self, new_view: CurrentView) -> &mut Self {
         self.current_view = new_view;
         self
     }

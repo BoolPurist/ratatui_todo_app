@@ -17,16 +17,11 @@ pub fn draw_one_todo(todo: &Todo, index: usize, selection: Selection) -> Vec<Lin
 
     let (color, tick) = (
         if done { Color::Green } else { Color::Red },
-        if done {
-            if is_selected {
-                constants::SELECTED_TICK
-            } else {
-                constants::TICK
-            }
-        } else if is_selected {
-            constants::SELECTED_UNTICK
-        } else {
-            constants::UNTICKED
+        match (done, is_selected) {
+            (true, true) => constants::SELECTED_TICK,
+            (true, false) => constants::TICK,
+            (false, true) => constants::SELECTED_UNTICK,
+            _ => constants::UNTICKED,
         },
     );
 

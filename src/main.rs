@@ -4,6 +4,8 @@ extern crate log;
 #[macro_use]
 extern crate anyhow;
 
+use std::env::VarError;
+
 pub use app_context::AppContext;
 use app_context::CurrentView;
 pub use todo::Todo;
@@ -32,7 +34,16 @@ fn main() -> AppResult<()> {
             Todo::dev_new("Hello xxxxxxxxxxxx xxxx xxxxxxxx xxxxxxxx xxxxx xxxxxxxxx xxxxxx xxxxxx xxxxxx xxxxxxx xxxxxxx xxx222222xx"),
         ]
         .into_iter(),
-    ).view(CurrentView::TodoCreation);
+    );
+
+    let view: CurrentView = match std::env::var(constants::START_SCREEN) {
+        Ok(to_resolve) => to_resolve.try_into(),
+        Err(VarError::NotPresent) => Ok(CurrentView::default()),
+        _ => Err(anyhow!("Invalid")),
+    }
+    .unwrap();
+
+    app.current_view = view;
 
     let mut terminal = setup::setup_terminal()?;
     run::run(&mut app, &mut terminal)?;
