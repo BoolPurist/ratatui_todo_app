@@ -1,3 +1,6 @@
+pub mod draw_todo_create_mask;
+pub mod draw_todo_list;
+
 use crate::{prelude::*, Todo};
 use ratatui::{
     style::{Color, Modifier, Style},
@@ -20,12 +23,10 @@ pub fn draw_one_todo(todo: &Todo, index: usize, selection: Selection) -> Vec<Lin
             } else {
                 constants::TICK
             }
+        } else if is_selected {
+            constants::SELECTED_UNTICK
         } else {
-            if is_selected {
-                constants::SELECTED_UNTICK
-            } else {
-                constants::UNTICKED
-            }
+            constants::UNTICKED
         },
     );
 

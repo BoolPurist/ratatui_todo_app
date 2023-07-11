@@ -5,6 +5,7 @@ extern crate log;
 extern crate anyhow;
 
 pub use app_context::AppContext;
+use app_context::CurrentView;
 pub use todo::Todo;
 pub use trimmed_text::TrimmedText;
 
@@ -26,11 +27,12 @@ fn main() -> AppResult<()> {
 
     let mut app = AppContext::new(
         [
+            Todo::dev_new("Hello xxxxxxxxxxxx xxxx xxxxxxxx xxxxxxxx xxxxx xxxxxxxxx xxxxxx xxxxxx xxxxxx xxxxxxx xxxxxxx xxx222222xx"),
             Todo::dev_new("Hello"),
             Todo::dev_new("Hello xxxxxxxxxxxx xxxx xxxxxxxx xxxxxxxx xxxxx xxxxxxxxx xxxxxx xxxxxx xxxxxx xxxxxxx xxxxxxx xxx222222xx"),
         ]
         .into_iter(),
-    );
+    ).view(CurrentView::TodoCreation);
 
     let mut terminal = setup::setup_terminal()?;
     run::run(&mut app, &mut terminal)?;

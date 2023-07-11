@@ -4,7 +4,6 @@ use crossterm::execute;
 use crossterm::terminal::{
     disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen,
 };
-use dotenv;
 use ratatui::backend::CrosstermBackend;
 use ratatui::Terminal;
 use std::path::Path;
@@ -19,7 +18,7 @@ pub fn set_up_logger() {
 
 pub fn load_env_file() {
     if cfg!(debug_assertions) {
-        let path: &Path = &Path::new(PROJECT_ROOT.into());
+        let path: &Path = Path::new(PROJECT_ROOT);
         let path = path.join(ENV_DATA);
 
         dotenv::from_path(path).expect("Could load env file for development.");

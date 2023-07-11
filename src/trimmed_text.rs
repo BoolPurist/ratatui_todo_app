@@ -16,3 +16,10 @@ impl TrimmedText {
         }
     }
 }
+
+impl TryFrom<String> for TrimmedText {
+    type Error = AppError;
+    fn try_from(value: String) -> Result<Self, Self::Error> {
+        Self::new(value)
+    }
+}

@@ -1,25 +1,45 @@
+use crossterm::event::KeyCode;
+use tui_textarea::TextArea;
+
 use crate::Todo;
 
-use crate::drawing;
+use crate::drawing::{draw_todo_create_mask, draw_todo_list};
+use crate::input::AppInput;
 use crate::prelude::*;
 
-use ratatui::text::Line;
-use ratatui::text::Text;
-use ratatui::widgets::Padding;
-use ratatui::widgets::Paragraph;
-use ratatui::widgets::Wrap;
-
-pub struct AppContext {
-    todos: Vec<Todo>,
-    selection: Selection,
+#[derive(Debug, PartialEq, Eq, Clone, Copy)]
+pub enum CurrentView {
+    TodoList,
+    TodoCreation,
 }
 
-impl AppContext {
+impl Default for CurrentView {
+    fn default() -> Self {
+        Self::TodoList
+    }
+}
+
+#[derive(Default)]
+pub struct AppContext<'a> {
+    pub todos: Vec<Todo>,
+    pub selection: Selection,
+    pub current_view: CurrentView,
+    pub creation_mask: TextArea<'a>,
+    pub submission_error: Option<String>,
+}
+
+impl<'a> AppContext<'a> {
     pub fn new(todos: impl IntoIterator<Item = Todo>) -> Self {
         Self {
             todos: todos.into_iter().collect(),
             selection: None,
+            ..Default::default()
         }
+    }
+
+    pub fn view(mut self, new_view: CurrentView) -> Self {
+        self.current_view = new_view;
+        self
     }
 
     pub fn toggle_todo(&mut self) {
@@ -50,37 +70,53 @@ impl AppContext {
         self.selection = new_selection;
     }
 
+    pub fn update(&mut self, event: &AppInput) {
+        match self.current_view {
+            CurrentView::TodoList => match event {
+                AppInput::UserPresedUp => self.selection_up(),
+                AppInput::UserPressedDown => self.selection_down(),
+                AppInput::UserPressedEnter => self.toggle_todo(),
+                AppInput::KeyEvent(key) => {
+                    if let KeyCode::Char('a') = key.code {
+                        self.current_view = CurrentView::TodoCreation
+                    }
+                }
+                _ => (),
+            },
+            CurrentView::TodoCreation => match *event {
+                AppInput::GoBack => {
+                    self.submission_error = None;
+                    self.creation_mask = TextArea::default();
+                    self.current_view = CurrentView::TodoList;
+                }
+                AppInput::UserPressedEnter => {
+                    self.handle_submission();
+                }
+                AppInput::KeyEvent(key_event) => {
+                    self.creation_mask.input(key_event);
+                }
+                _ => (),
+            },
+        }
+    }
+
+    fn handle_submission(&mut self) {
+        let text_area = std::mem::take(&mut self.creation_mask);
+        let content = text_area.into_lines();
+        match content.join("\n").try_into() {
+            Ok(trimmed_content) => {
+                let new_todo = Todo::new(trimmed_content);
+                self.todos.push(new_todo);
+                self.current_view = CurrentView::TodoList;
+            }
+            Err(submission_error) => self.submission_error = Some(submission_error.to_string()),
+        }
+    }
+
     pub fn render(&self, tui: &mut AppBackEndTerminal) -> AppResult<()> {
-        use ratatui::widgets::Block;
-        use ratatui::widgets::Borders;
-
-        tui.draw(|frame| {
-            let whole_size = frame.size();
-            let container = Block::default()
-                .borders(Borders::ALL)
-                .title("Todo List")
-                .padding(Padding {
-                    top: 1,
-                    bottom: 1,
-                    left: 2,
-                    right: 2,
-                });
-
-            let list: Vec<Line> = self
-                .todos
-                .iter()
-                .enumerate()
-                .map(|(index, todo)| drawing::draw_one_todo(todo, index, self.selection))
-                .flatten()
-                .collect();
-
-            let list = Paragraph::new(Text::from(list))
-                .wrap(Wrap { trim: true })
-                .block(container);
-
-            frame.render_widget(list, whole_size);
-            // frame.render_widget(list, laytout[1]);
-        })?;
-        Ok(())
+        match self.current_view {
+            CurrentView::TodoList => draw_todo_list::render(self, tui),
+            CurrentView::TodoCreation => draw_todo_create_mask::render(self, tui),
+        }
     }
 }

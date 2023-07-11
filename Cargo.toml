@@ -12,7 +12,9 @@ dotenv = "0.15.0"
 env_logger = "0.10.0"
 log = "0.4.19"
 ratatui = "0.21.0"
-tui-textarea = "0.2.0"
+tui-textarea = { git = "https://github.com/Frostie314159/tui-textarea.git", rev = "716b29bc09af78bd7282769b84a367fb6439b2fd", default-features = false, features = [
+  "ratatui-crossterm",
+] }
 
 
 derive_more = { version = "0.99.17", default-feature = false, features = [

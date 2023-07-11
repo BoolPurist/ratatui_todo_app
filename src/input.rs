@@ -10,6 +10,7 @@ pub enum AppInput {
     UserPresedUp,
     UserPressedEnter,
     UserPressedDown,
+    GoBack,
     Tick,
     Quit,
 }
@@ -22,6 +23,7 @@ pub fn handle_input() -> AppResult<AppInput> {
                 KeyCode::Enter => Ok(AppInput::UserPressedEnter),
                 KeyCode::Down => Ok(AppInput::UserPressedDown),
                 KeyCode::Up => Ok(AppInput::UserPresedUp),
+                KeyCode::Esc => Ok(AppInput::GoBack),
                 _ => Ok(AppInput::KeyEvent(key)),
             },
             event => Ok(AppInput::Event(event)),
