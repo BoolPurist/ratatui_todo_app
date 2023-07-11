@@ -9,6 +9,7 @@ pub use todo::Todo;
 pub use trimmed_text::TrimmedText;
 
 mod app_context;
+pub mod constants;
 mod drawing;
 mod input;
 mod prelude;
