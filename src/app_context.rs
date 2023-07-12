@@ -90,11 +90,22 @@ impl AppContext {
                 AppInput::UserPresedUp => self.selection_up(),
                 AppInput::UserPressedDown => self.selection_down(),
                 AppInput::UserPressedEnter => self.toggle_todo(),
-                AppInput::KeyEvent(key) => {
-                    if let KeyCode::Char('a') = key.code {
-                        self.current_view = CurrentView::TodoCreation
+                AppInput::KeyEvent(key) => match key.code {
+                    constants::DEFAULT_ADD => self.current_view = CurrentView::TodoCreation,
+                    constants::DEFAULT_DELTE => {
+                        if let Some(current_selection) = self.selection {
+                            let index = current_selection as usize;
+
+                            self.todos.remove(index);
+                            self.selection = if self.todos.is_empty() {
+                                None
+                            } else {
+                                self.selection.map(|old| old.saturating_sub(1))
+                            };
+                        }
                     }
-                }
+                    _ => (),
+                },
                 _ => (),
             },
             CurrentView::TodoCreation => match *event {

@@ -1,7 +1,7 @@
 use std::time::Duration;
 
 use crate::prelude::*;
-use crossterm::event::{self, Event, KeyCode, KeyEvent};
+use crossterm::event::{self, Event, KeyEvent};
 
 #[derive(Debug, PartialEq, Eq)]
 pub enum AppInput {
@@ -19,11 +19,11 @@ pub fn handle_input() -> AppResult<AppInput> {
     if event::poll(Duration::from_millis(250))? {
         match event::read()? {
             Event::Key(key) => match key.code {
-                KeyCode::Char('q') => Ok(AppInput::Quit),
-                KeyCode::Enter => Ok(AppInput::UserPressedEnter),
-                KeyCode::Down => Ok(AppInput::UserPressedDown),
-                KeyCode::Up => Ok(AppInput::UserPresedUp),
-                KeyCode::Esc => Ok(AppInput::GoBack),
+                constants::DEFAULT_QUIT => Ok(AppInput::Quit),
+                constants::DEFAULT_ENTER => Ok(AppInput::UserPressedEnter),
+                constants::DEFAULT_DOWN => Ok(AppInput::UserPressedDown),
+                constants::DEFAULT_UP => Ok(AppInput::UserPresedUp),
+                constants::DEFAULT_BACK => Ok(AppInput::GoBack),
                 _ => Ok(AppInput::KeyEvent(key)),
             },
             event => Ok(AppInput::Event(event)),
