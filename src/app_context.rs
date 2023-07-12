@@ -1,3 +1,5 @@
+use std::time::Duration;
+
 use poll_promise::Promise;
 use tui_textarea::TextArea;
 
@@ -43,12 +45,23 @@ pub struct AppContext {
     pending_save: Option<Promise<AppResult>>,
 }
 
+impl Drop for AppContext {
+    fn drop(&mut self) {
+        if let Some(wait_on) = &mut self.pending_save {
+            _ = wait_on.block_until_ready();
+        }
+    }
+}
+
 impl AppContext {
     pub fn new(todos: impl IntoIterator<Item = Todo>) -> Self {
         Self {
             todos: todos.into_iter().collect(),
             selection: None,
-            ..Default::default()
+            current_view: Default::default(),
+            creation_mask: Default::default(),
+            pending_save: None,
+            submission_error: None,
         }
     }
 
