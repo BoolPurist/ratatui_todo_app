@@ -11,8 +11,10 @@ use app_context::CurrentView;
 pub use todo::Todo;
 pub use trimmed_text::TrimmedText;
 
-mod app_context;
 pub mod constants;
+
+mod app_context;
+mod data_file_source;
 mod drawing;
 mod input;
 mod prelude;
@@ -27,14 +29,16 @@ fn main() -> AppResult<()> {
     setup::load_env_file();
     setup::set_up_logger();
 
-    let mut app = AppContext::new(
-        [
-            Todo::dev_new("Hello xxxxxxxxxxxx xxxx xxxxxxxx xxxxxxxx xxxxx xxxxxxxxx xxxxxx xxxxxx xxxxxx xxxxxxx xxxxxxx xxx222222xx"),
-            Todo::dev_new("Hello"),
-            Todo::dev_new("Hello xxxxxxxxxxxx xxxx xxxxxxxx xxxxxxxx xxxxx xxxxxxxxx xxxxxx xxxxxx xxxxxx xxxxxxx xxxxxxx xxx222222xx"),
-        ]
-        .into_iter(),
-    );
+    let mut terminal = setup::setup_terminal()?;
+    let mut app = set_up_app()?;
+    run::run(&mut app, &mut terminal)?;
+    setup::restore_terminal(&mut terminal)?;
+    Ok(())
+}
+
+fn set_up_app() -> AppResult<AppContext> {
+    let data = data_file_source::provide_data()?;
+    let mut app = AppContext::new(data.into_iter());
 
     let view: CurrentView = match std::env::var(constants::START_SCREEN) {
         Ok(to_resolve) => to_resolve.try_into(),
@@ -44,9 +48,5 @@ fn main() -> AppResult<()> {
     .unwrap();
 
     app.current_view = view;
-
-    let mut terminal = setup::setup_terminal()?;
-    run::run(&mut app, &mut terminal)?;
-    setup::restore_terminal(&mut terminal)?;
-    Ok(())
+    Ok(app)
 }

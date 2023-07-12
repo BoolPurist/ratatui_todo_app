@@ -1,7 +1,8 @@
 use crate::prelude::*;
 use derive_more::{AsRef, Deref, Display, Into};
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug, AsRef, Deref, Into, Display, PartialEq, Eq, Clone)]
+#[derive(Debug, AsRef, Deref, Into, Display, PartialEq, Eq, Clone, Deserialize, Serialize)]
 pub struct TrimmedText(String);
 
 impl TrimmedText {

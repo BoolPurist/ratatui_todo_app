@@ -11,7 +11,7 @@ pub fn run(app: &mut AppContext, terminal: &mut AppBackEndTerminal) -> AppResult
             break;
         }
 
-        app.update(&event);
+        app.update(&event)?;
         app.render(terminal)?;
     }
     Ok(())

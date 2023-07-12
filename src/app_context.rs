@@ -1,7 +1,6 @@
-use crossterm::event::KeyCode;
 use tui_textarea::TextArea;
 
-use crate::Todo;
+use crate::{data_file_source, Todo};
 
 use crate::drawing::{draw_todo_create_mask, draw_todo_list};
 use crate::input::AppInput;
@@ -35,7 +34,7 @@ impl Default for CurrentView {
 
 #[derive(Default)]
 pub struct AppContext {
-    pub todos: Vec<Todo>,
+    pub todos: Todos,
     pub selection: Selection,
     pub current_view: CurrentView,
     pub creation_mask: TextArea<'static>,
@@ -84,7 +83,7 @@ impl AppContext {
         self.selection = new_selection;
     }
 
-    pub fn update(&mut self, event: &AppInput) {
+    pub fn update(&mut self, event: &AppInput) -> AppResult {
         match self.current_view {
             CurrentView::TodoList => match event {
                 AppInput::UserPresedUp => self.selection_up(),
@@ -104,6 +103,9 @@ impl AppContext {
                             };
                         }
                     }
+                    constants::DEFAULT_SAVE => {
+                        data_file_source::save_data(&self.todos)?;
+                    }
                     _ => (),
                 },
                 _ => (),
@@ -122,7 +124,9 @@ impl AppContext {
                 }
                 _ => (),
             },
-        }
+        };
+
+        Ok(())
     }
 
     fn handle_submission(&mut self) {
