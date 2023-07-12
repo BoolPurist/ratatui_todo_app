@@ -1,6 +1,9 @@
-use std::time::Duration;
+pub use current_view::CurrentView;
+pub use io_task_result::IoTaskResult;
 
-use poll_promise::Promise;
+mod current_view;
+mod io_task_result;
+
 use tui_textarea::TextArea;
 
 use crate::{data_file_source, Todo};
@@ -9,32 +12,6 @@ use crate::drawing::{draw_todo_create_mask, draw_todo_list};
 use crate::input::AppInput;
 use crate::prelude::*;
 
-#[derive(Debug, PartialEq, Eq, Clone, Copy)]
-pub enum CurrentView {
-    TodoList,
-    TodoCreation,
-}
-
-impl TryFrom<String> for CurrentView {
-    type Error = AppError;
-    fn try_from(value: String) -> Result<Self, Self::Error> {
-        match value.as_str() {
-            "TodoList" => Ok(Self::TodoList),
-            "TodoAdd" => Ok(Self::TodoCreation),
-            _ => Err(anyhow!(
-                "Word \"{}\" is not a valid keyword for a start view",
-                value
-            )),
-        }
-    }
-}
-
-impl Default for CurrentView {
-    fn default() -> Self {
-        Self::TodoList
-    }
-}
-
 #[derive(Default)]
 pub struct AppContext {
     pub todos: Todos,
@@ -42,12 +19,12 @@ pub struct AppContext {
     pub current_view: CurrentView,
     pub creation_mask: TextArea<'static>,
     pub submission_error: Option<String>,
-    pending_save: Option<Promise<AppResult>>,
+    pending_save: IoTaskResult<()>,
 }
 
 impl Drop for AppContext {
     fn drop(&mut self) {
-        if let Some(wait_on) = &mut self.pending_save {
+        if let IoTaskResult::Working(wait_on) = &mut self.pending_save {
             _ = wait_on.block_until_ready();
         }
     }
@@ -60,7 +37,7 @@ impl AppContext {
             selection: None,
             current_view: Default::default(),
             creation_mask: Default::default(),
-            pending_save: None,
+            pending_save: IoTaskResult::Idle,
             submission_error: None,
         }
     }
@@ -89,7 +66,17 @@ impl AppContext {
     }
 
     pub fn is_saving(&self) -> bool {
-        self.pending_save.is_some()
+        self.pending_save.is_working()
+    }
+
+    pub fn has_failed(&self) -> Vec<&AppError> {
+        let mut errors = Vec::new();
+
+        if let IoTaskResult::Failed(error) = &self.pending_save {
+            errors.push(error);
+        }
+
+        errors
     }
 
     pub fn selection_down(&mut self) {
@@ -108,11 +95,7 @@ impl AppContext {
             CurrentView::TodoCreation => self.update_adding_todo(event),
         };
 
-        if let Some(pending_or_done) = &mut self.pending_save {
-            if pending_or_done.ready().is_some() {
-                self.pending_save = None;
-            }
-        }
+        self.pending_save.try_fetch_from_io_task();
 
         Ok(())
     }
@@ -172,21 +155,20 @@ impl AppContext {
     }
 
     fn save_if_not_pending(&mut self) {
-        if self.pending_save.is_none() {
+        if !self.pending_save.is_working() {
             let data = self.todos.clone();
 
             let promise = poll_promise::Promise::spawn_thread("Task: Saving Todos", move || {
                 data_file_source::save_data(&data)
             });
 
-            self.pending_save = Some(promise);
+            self.pending_save = IoTaskResult::Working(promise);
         }
     }
 
     fn delete_todo(&mut self) {
         if let Some(current_selection) = self.selection {
             let index = current_selection as usize;
-
             self.todos.remove(index);
             self.selection = if self.todos.is_empty() {
                 None
