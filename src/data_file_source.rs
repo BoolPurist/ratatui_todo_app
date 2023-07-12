@@ -2,12 +2,18 @@ use std::{fs, io::ErrorKind, path::PathBuf};
 
 use crate::prelude::*;
 fn get_data_source_path() -> AppResult<PathBuf> {
-    if cfg!(debug_assertions) {
+    if cfg!(debug_assertions) && !*constants::USE_USER_FOLDER {
         let to_dev_folder = PathBuf::from(constants::PROJECT_ROOT).join(constants::DEV_DATA_FOLDER);
         fs::create_dir_all(&to_dev_folder)?;
         Ok(to_dev_folder.join(constants::DATA_SOURCE_NAME))
     } else {
-        todo!("Not implemented for productio");
+        let data_folder = dirs::data_dir()
+            .ok_or_else(|| anyhow!("Could not retrieve data folder"))?
+            .join(constants::APP_NAME);
+
+        fs::create_dir_all(&data_folder)?;
+
+        Ok(data_folder.join(constants::DATA_SOURCE_NAME))
     }
 }
 
