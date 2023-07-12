@@ -10,7 +10,6 @@ pub enum AppInput {
     UserPresedUp,
     UserPressedEnter,
     UserPressedDown,
-    GoBack,
     Tick,
     Quit,
 }
@@ -23,7 +22,6 @@ pub fn handle_input() -> AppResult<AppInput> {
                 constants::DEFAULT_ENTER => Ok(AppInput::UserPressedEnter),
                 constants::DEFAULT_DOWN => Ok(AppInput::UserPressedDown),
                 constants::DEFAULT_UP => Ok(AppInput::UserPresedUp),
-                constants::DEFAULT_BACK => Ok(AppInput::GoBack),
                 _ => Ok(AppInput::KeyEvent(key)),
             },
             event => Ok(AppInput::Event(event)),

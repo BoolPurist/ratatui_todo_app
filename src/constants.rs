@@ -13,7 +13,6 @@ pub const START_SCREEN: &str = "START_SCREEN";
 
 pub const DEFAULT_DELTE: KeyCode = KeyCode::Char('d');
 pub const DEFAULT_ADD: KeyCode = KeyCode::Char('a');
-pub const DEFAULT_BACK: KeyCode = KeyCode::Char('b');
 pub const DEFAULT_QUIT: KeyCode = KeyCode::Char('q');
 pub const DEFAULT_SAVE: KeyCode = KeyCode::Char('S');
 

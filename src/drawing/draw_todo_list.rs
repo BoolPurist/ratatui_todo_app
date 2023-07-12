@@ -40,7 +40,7 @@ pub fn render(ctx: &AppContext, tui: &mut AppBackEndTerminal) -> AppResult<()> {
     Ok(())
 }
 
-fn create_todo_list_block<'a>(ctx: &'a AppContext) -> Paragraph<'a> {
+fn create_todo_list_block(ctx: &AppContext) -> Paragraph {
     let container = Block::default()
         .borders(Borders::ALL)
         .title("List")

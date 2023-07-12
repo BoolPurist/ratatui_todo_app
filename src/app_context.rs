@@ -1,5 +1,3 @@
-use std::time::Duration;
-
 use poll_promise::Promise;
 use tui_textarea::TextArea;
 
@@ -76,6 +74,7 @@ impl AppContext {
         };
         self.selection = new_selection;
     }
+
     pub fn is_saving(&self) -> bool {
         self.pending_save.is_some()
     }
@@ -92,55 +91,8 @@ impl AppContext {
 
     pub fn update(&mut self, event: &AppInput) -> AppResult {
         match self.current_view {
-            CurrentView::TodoList => match event {
-                AppInput::UserPresedUp => self.selection_up(),
-                AppInput::UserPressedDown => self.selection_down(),
-                AppInput::UserPressedEnter => self.toggle_todo(),
-                AppInput::KeyEvent(key) => match key.code {
-                    constants::DEFAULT_ADD => self.current_view = CurrentView::TodoCreation,
-                    constants::DEFAULT_DELTE => {
-                        if let Some(current_selection) = self.selection {
-                            let index = current_selection as usize;
-
-                            self.todos.remove(index);
-                            self.selection = if self.todos.is_empty() {
-                                None
-                            } else {
-                                self.selection.map(|old| old.saturating_sub(1))
-                            };
-                        }
-                    }
-                    constants::DEFAULT_SAVE => {
-                        if self.pending_save.is_none() {
-                            let data = self.todos.clone();
-
-                            let promise = poll_promise::Promise::spawn_thread(
-                                "Task: Saving Todos",
-                                move || data_file_source::save_data(&data),
-                            );
-
-                            self.pending_save = Some(promise);
-                        }
-                    }
-                    _ => (),
-                },
-
-                _ => (),
-            },
-            CurrentView::TodoCreation => match *event {
-                AppInput::GoBack => {
-                    self.submission_error = None;
-                    self.creation_mask = TextArea::default();
-                    self.current_view = CurrentView::TodoList;
-                }
-                AppInput::UserPressedEnter => {
-                    self.handle_submission();
-                }
-                AppInput::KeyEvent(key_event) => {
-                    self.creation_mask.input(key_event);
-                }
-                _ => (),
-            },
+            CurrentView::TodoList => self.update_todo_list(event),
+            CurrentView::TodoCreation => self.update_adding_todo(event),
         };
 
         if let Some(pending_or_done) = &mut self.pending_save {
@@ -148,7 +100,15 @@ impl AppContext {
                 self.pending_save = None;
             }
         }
+
         Ok(())
+    }
+
+    pub fn render(&self, tui: &mut AppBackEndTerminal) -> AppResult<()> {
+        match self.current_view {
+            CurrentView::TodoList => draw_todo_list::render(self, tui),
+            CurrentView::TodoCreation => draw_todo_create_mask::render(self, tui),
+        }
     }
 
     fn handle_submission(&mut self) {
@@ -164,10 +124,62 @@ impl AppContext {
         }
     }
 
-    pub fn render(&self, tui: &mut AppBackEndTerminal) -> AppResult<()> {
-        match self.current_view {
-            CurrentView::TodoList => draw_todo_list::render(self, tui),
-            CurrentView::TodoCreation => draw_todo_create_mask::render(self, tui),
+    fn update_adding_todo(&mut self, event: &AppInput) {
+        match *event {
+            AppInput::UserPressedEnter => {
+                self.handle_submission();
+            }
+            AppInput::KeyEvent(key_event) => {
+                if constants::DEFAULT_ESC == key_event.code {
+                    self.submission_error = None;
+                    self.creation_mask = TextArea::default();
+                    self.current_view = CurrentView::TodoList;
+                } else {
+                    self.creation_mask.input(key_event);
+                }
+            }
+            _ => (),
+        }
+    }
+
+    fn update_todo_list(&mut self, event: &AppInput) {
+        match event {
+            AppInput::UserPresedUp => self.selection_up(),
+            AppInput::UserPressedDown => self.selection_down(),
+            AppInput::UserPressedEnter => self.toggle_todo(),
+            AppInput::KeyEvent(key) => match key.code {
+                constants::DEFAULT_ADD => self.current_view = CurrentView::TodoCreation,
+                constants::DEFAULT_DELTE => self.delete_todo(),
+                constants::DEFAULT_SAVE => self.save_if_not_pending(),
+                _ => (),
+            },
+
+            _ => (),
+        }
+    }
+
+    fn save_if_not_pending(&mut self) {
+        if self.pending_save.is_none() {
+            let data = self.todos.clone();
+
+            let promise = poll_promise::Promise::spawn_thread("Task: Saving Todos", move || {
+                data_file_source::save_data(&data)
+            });
+
+            self.pending_save = Some(promise);
+        }
+    }
+
+    fn delete_todo(&mut self) {
+        if let Some(current_selection) = self.selection {
+            let index = current_selection as usize;
+
+            self.todos.remove(index);
+            self.selection = if self.todos.is_empty() {
+                None
+            } else {
+                self.selection.map(|old| old.saturating_sub(1))
+            };
         }
     }
 }

@@ -33,7 +33,7 @@ pub fn save_data(to_save: &Todos) -> AppResult {
 
     let to_str = serde_json::to_string_pretty(to_save)?;
 
-    fs::write(&path, to_str)?;
+    fs::write(path, to_str)?;
 
     Ok(())
 }
