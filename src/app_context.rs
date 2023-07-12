@@ -1,3 +1,6 @@
+use std::time::Duration;
+
+use poll_promise::Promise;
 use tui_textarea::TextArea;
 
 use crate::{data_file_source, Todo};
@@ -39,6 +42,7 @@ pub struct AppContext {
     pub current_view: CurrentView,
     pub creation_mask: TextArea<'static>,
     pub submission_error: Option<String>,
+    pending_save: Option<Promise<AppResult>>,
 }
 
 impl AppContext {
@@ -72,6 +76,9 @@ impl AppContext {
         };
         self.selection = new_selection;
     }
+    pub fn is_saving(&self) -> bool {
+        self.pending_save.is_some()
+    }
 
     pub fn selection_down(&mut self) {
         let new_selection: Selection = match self.selection {
@@ -104,10 +111,20 @@ impl AppContext {
                         }
                     }
                     constants::DEFAULT_SAVE => {
-                        data_file_source::save_data(&self.todos)?;
+                        if self.pending_save.is_none() {
+                            let data = self.todos.clone();
+
+                            let promise = poll_promise::Promise::spawn_thread(
+                                "Task: Saving Todos",
+                                move || data_file_source::save_data(&data),
+                            );
+
+                            self.pending_save = Some(promise);
+                        }
                     }
                     _ => (),
                 },
+
                 _ => (),
             },
             CurrentView::TodoCreation => match *event {
@@ -126,6 +143,11 @@ impl AppContext {
             },
         };
 
+        if let Some(pending_or_done) = &mut self.pending_save {
+            if pending_or_done.ready().is_some() {
+                self.pending_save = None;
+            }
+        }
         Ok(())
     }
 

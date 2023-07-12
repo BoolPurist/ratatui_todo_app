@@ -1,7 +1,7 @@
 use crate::TrimmedText;
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Deserialize, Serialize)]
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Todo {
     content: TrimmedText,
     done: bool,
