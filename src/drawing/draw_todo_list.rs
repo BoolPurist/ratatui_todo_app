@@ -25,10 +25,6 @@ pub fn render_todos(
 
             draw_info_and_errors(ctx, frame, size)
         };
-
-
-        
-        
         
         let whole_height = size.height;
         let width = size.width;

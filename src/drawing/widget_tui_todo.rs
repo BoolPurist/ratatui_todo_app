@@ -26,6 +26,11 @@ impl<'a> Widget for WidgetTodo<'a> {
         let (x, y) = (area.x, area.y);
         let check_mark_width = check_mark.width() as u16;
 
+        let no_check_mark_poss = check_mark_width > area.width;
+        if no_check_mark_poss {
+            return;
+        }
+        
         if self.is_selected {
             buf.set_style(area, Style::default().add_modifier(Modifier::BOLD));
         }
@@ -58,7 +63,7 @@ impl<'a> WidgetTodo<'a> {
 
     fn width_after_checkmark(&self) -> usize {
         let checkmark = self.create_checkmark();
-        self.width_to_wrap as usize - checkmark.width()
+        (self.width_to_wrap as usize).saturating_sub(checkmark.width())  
     }
 
     fn wrapped(&self) -> &[Cow<'a, str>] {
