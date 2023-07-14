@@ -20,7 +20,6 @@ pub fn load_env_file() {
     if cfg!(debug_assertions) {
         let path: &Path = Path::new(PROJECT_ROOT);
         let path = path.join(ENV_DATA);
-
         dotenv::from_path(path).expect("Could load env file for development.");
     }
 }

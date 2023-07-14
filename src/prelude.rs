@@ -4,9 +4,9 @@ use ratatui::{backend::CrosstermBackend, Terminal};
 
 pub type AppError = anyhow::Error;
 pub type AppResult<T = ()> = Result<T, AppError>;
-pub type AppBackEndTerminal = Terminal<CrosstermBackend<Stdout>>;
-pub type Selection = Option<u16>;
-pub type TermNum = u16;
+pub type AppBackEnd = CrosstermBackend<Stdout>;
+pub type AppBackEndTerminal = Terminal<AppBackEnd>;
+pub type Selection = u16;
 pub type Todos = Vec<Todo>;
 
 pub use crate::constants;

@@ -34,7 +34,7 @@ impl AppContext {
     pub fn new(todos: impl IntoIterator<Item = Todo>) -> Self {
         Self {
             todos: todos.into_iter().collect(),
-            selection: None,
+            selection: 0,
             current_view: Default::default(),
             creation_mask: Default::default(),
             pending_save: IoTaskResult::Idle,
@@ -47,22 +47,21 @@ impl AppContext {
         self
     }
 
+    pub fn no_todos(&self) -> bool {
+        self.todos.is_empty()
+    }
+
     pub fn toggle_todo(&mut self) {
-        if let Some(selection) = self.selection {
+        if !self.todos.is_empty() {
             self.todos
-                .get_mut(selection as usize)
+                .get_mut(self.selection as usize)
                 .unwrap()
                 .toggle_done();
         }
     }
 
     pub fn selection_up(&mut self) {
-        let new_selection: Selection = match self.selection {
-            None if !self.todos.is_empty() => Some(0),
-            Some(selection) => Some(selection.saturating_sub(1)),
-            _ => None,
-        };
-        self.selection = new_selection;
+        self.selection = self.selection.saturating_sub(1);
     }
 
     pub fn is_saving(&self) -> bool {
@@ -80,13 +79,10 @@ impl AppContext {
     }
 
     pub fn selection_down(&mut self) {
-        let new_selection: Selection = match self.selection {
-            None if !self.todos.is_empty() => Some(0),
-            Some(selection) => Some(selection.saturating_add(1)),
-            _ => None,
-        }
-        .map(|to_clamp| to_clamp.min(self.todos.len().min(TermNum::MAX as usize) as TermNum - 1));
-        self.selection = new_selection;
+        self.selection = self
+            .selection
+            .saturating_add(1)
+            .min((self.todos.len() - 1) as u16);
     }
 
     pub fn update(&mut self, event: &AppInput) -> AppResult {
@@ -102,7 +98,7 @@ impl AppContext {
 
     pub fn render(&self, tui: &mut AppBackEndTerminal) -> AppResult<()> {
         match self.current_view {
-            CurrentView::TodoList => draw_todo_list::render(self, tui),
+            CurrentView::TodoList => draw_todo_list::render_todos(tui, self),
             CurrentView::TodoCreation => draw_todo_create_mask::render(self, tui),
         }
     }
@@ -167,14 +163,10 @@ impl AppContext {
     }
 
     fn delete_todo(&mut self) {
-        if let Some(current_selection) = self.selection {
-            let index = current_selection as usize;
+        if !self.todos.is_empty() {
+            let index = self.selection as usize;
             self.todos.remove(index);
-            self.selection = if self.todos.is_empty() {
-                None
-            } else {
-                self.selection.map(|old| old.saturating_sub(1))
-            };
+            self.selection_up();
         }
     }
 }
